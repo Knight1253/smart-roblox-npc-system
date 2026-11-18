@@ -1,0 +1,3 @@
+-- TopbarPlus dependency used by the Smart NPC owner control panel.
+[dependencies]
+TopbarPlus = "1foreverhd/topbarplus@3.5.0"

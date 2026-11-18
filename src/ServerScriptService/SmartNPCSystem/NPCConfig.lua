@@ -7,7 +7,6 @@ return {
 	RegionName = "NPCSpawnRegion",
 	TemplateName = "NPC",
 	SpawnedFolderName = "SpawnedNPCs",
-
 	DetectionRange = 80,
 	HearingRange = 60,
 	StealthDetectionMultiplier = 0.4,
@@ -21,7 +20,6 @@ return {
 	ThinkInterval = 0.3,
 	PathRefreshInterval = 1.25,
 	MaxChaseDistance = 150,
-	
 	AttackDamage = 15,
 	AttackRange = 5,
 	AttackCooldown = 1.2,
@@ -30,20 +28,17 @@ return {
 	UseFactions = true,
 	DefaultFaction = "Neutral",
 	GroupAlertRange = 90,
-	
 	GearFolderName = "NPCGear",
 	LootFolderName = "NPCLoot",
 	LootDropChance = 0.25,
 	ShowEmotionLabel = true,
 	PatrolFolderName = "NPCPatrols",
-	
 	EnablePersistence = true,
 	DataStoreName = "SmartNPCPlayerData_v1",
 	PersistenceSaveInterval = 90,
 	StartingCoins = 100,
 	StartingReputation = 0,
-	
-	-- Add your Roblox user IDs to enable the optional chat commands.
+	MemoryLimit = 100,
 	AdminUserIds = {},
 	DebugAttributes = true,
 }
