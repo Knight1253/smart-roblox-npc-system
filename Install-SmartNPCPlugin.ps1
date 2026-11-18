@@ -1,97 +1,42 @@
 $ErrorActionPreference = 'Stop'
 $repo = 'Knight1253/smart-roblox-npc-system'
 $branch = 'main'
-$rawBase = "https://raw.githubusercontent.com/$repo/$branch"
-$pluginSourceUrl = "$rawBase/plugin/SmartNPCInstaller.lua"
+$pluginPath = 'plugin/SmartNPCInstaller.lua'
+$apiUrl = "https://api.github.com/repos/$repo/contents/$pluginPath`?ref=$branch"
 
-function Get-StudioPluginDirectories {
-    $candidates = [System.Collections.Generic.List[string]]::new()
-
-    # Standard Roblox/Bloxstrap user-data locations. Bloxstrap normally launches
-    # the official Studio executable and does not change this shared user plugin path.
-    if ($env:LOCALAPPDATA) {
-        $candidates.Add((Join-Path $env:LOCALAPPDATA 'Roblox\Plugins'))
-    }
-
-    # Honor an explicitly configured Studio/Roblox data directory if present.
-    foreach ($name in @('BLOXSTRAP_ROBLOX_PATH', 'ROBLOX_APP_DATA')) {
-        $value = [Environment]::GetEnvironmentVariable($name)
-        if ($value) {
-            $candidates.Add((Join-Path $value 'Plugins'))
-            $candidates.Add((Join-Path $value 'Roblox\Plugins'))
-        }
-    }
-
-    # Look up the Studio install location for diagnostics and possible custom
-    # user-data layouts. Never install into the application install directory.
-    $studioRoots = [System.Collections.Generic.List[string]]::new()
-    $uninstallKeys = @(
-        'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
-        'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
-        'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
-    )
-    foreach ($key in $uninstallKeys) {
-        if (Test-Path $key) {
-            Get-ItemProperty $key -ErrorAction SilentlyContinue |
-                Where-Object { $_.DisplayName -match 'Roblox' -and $_.InstallLocation } |
-                ForEach-Object { $studioRoots.Add([string]$_.InstallLocation) }
-        }
-    }
-
-    $bloxstrapSettings = @(
-        (Join-Path $env:LOCALAPPDATA 'Bloxstrap\Settings.json'),
-        (Join-Path $env:LOCALAPPDATA 'Bloxstrap\Modifications\ClientSettings\ClientAppSettings.json')
-    )
-    foreach ($settingsFile in $bloxstrapSettings) {
-        if (Test-Path $settingsFile) {
-            try {
-                $settings = Get-Content -Raw $settingsFile | ConvertFrom-Json
-                foreach ($property in @(' RobloxPath', 'RobloxPath', 'InstallLocation', 'DataDirectory')) {
-                    $value = $settings.$property
-                    if ($value -and (Test-Path $value)) { $studioRoots.Add([string]$value) }
-                }
-            } catch {
-                Write-Verbose "Couldn't parse optional Bloxstrap settings at $settingsFile"
-            }
-        }
-    }
-
-    # Roblox plugins are user-specific, not stored beside the Studio binary.
-    # Include the standard path first; add any user-profile Roblox data folders
-    # found while inspecting custom Bloxstrap/Studio locations as fallbacks.
-    foreach ($root in $studioRoots) {
-        if ($root -and (Test-Path $root)) {
-            $parent = Split-Path -Parent $root
-            if ($parent -and (Split-Path -Leaf $parent) -eq 'Versions') {
-                $candidates.Add((Join-Path (Split-Path -Parent $parent) 'Plugins'))
-            }
-        }
-    }
-
-    $seen = @{}
-    foreach ($candidate in $candidates) {
-        if (-not [string]::IsNullOrWhiteSpace($candidate)) {
-            $full = [System.IO.Path]::GetFullPath($candidate)
-            if (-not $seen.ContainsKey($full)) {
-                $seen[$full] = $true
-                Write-Host "Checking Studio plugin location: $full"
-                return $full
-            }
-        }
-    }
-
-    throw 'Could not determine the Roblox Studio plugin directory. Set LOCALAPPDATA or check your Windows user profile.'
+# Use GitHub CLI's existing OAuth session. Never write the credential to the
+# plugin file or pass it on a command line as an argument.
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    throw 'GitHub CLI (gh) is required to install this private-repository plugin. Install gh, run gh auth login, then retry.'
+}
+$token = (& gh auth token --hostname github.com 2>$null | Select-Object -First 1).Trim()
+if (-not $token) {
+    throw 'No GitHub CLI login found. Run gh auth login and ensure the account can read Knight1253/smart-roblox-npc-system.'
 }
 
-$pluginsDir = Get-StudioPluginDirectories
+$headers = @{
+    Authorization = "Bearer $token"
+    Accept = 'application/vnd.github+json'
+    'X-GitHub-Api-Version' = '2022-11-28'
+    'User-Agent' = 'SmartRobloxNPCPluginInstaller'
+}
+Write-Host "Downloading local Studio plugin from private repo $repo..."
+try {
+    $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers -Method Get
+} finally {
+    $token = $null
+    $headers.Authorization = $null
+}
+if (-not $response.content) { throw 'GitHub returned no plugin source. Check repository permissions and branch.' }
+$encoded = ($response.content -replace '\s', '')
+$source = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+
+# Studio's Windows user Plugins directory is shared by the official Studio
+# client and Bloxstrap-launched Studio. Bloxstrap changes the Roblox install,
+# not the per-user plugin location.
+$pluginsDir = Join-Path $env:LOCALAPPDATA 'Roblox\Plugins'
 New-Item -ItemType Directory -Force -Path $pluginsDir | Out-Null
-
-$tempSource = Join-Path $env:TEMP 'SmartNPCInstaller.lua'
 $pluginFile = Join-Path $pluginsDir 'SmartNPCInstaller.rbxmx'
-
-Write-Host "Downloading Smart NPC Installer from $repo..."
-Invoke-WebRequest -Uri $pluginSourceUrl -OutFile $tempSource
-$source = [System.IO.File]::ReadAllText($tempSource)
 $escaped = [System.Security.SecurityElement]::Escape($source)
 $xml = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -107,9 +52,7 @@ $xml = @"
   </Item>
 </roblox>
 "@
-
 [System.IO.File]::WriteAllText($pluginFile, $xml, [System.Text.UTF8Encoding]::new($false))
-Remove-Item $tempSource -Force -ErrorAction SilentlyContinue
-Write-Host "Installed local plugin file: $pluginFile"
-Write-Host 'Bloxstrap normally uses the same per-user Roblox Studio Plugins directory.'
-Write-Host 'Restart Roblox Studio to load it. In Studio, use Plugins > Smart NPC System.'
+Write-Host "Installed plugin to: $pluginFile"
+Write-Host 'The GitHub credential was used only for this download and was not saved in the plugin.'
+Write-Host 'Restart Roblox Studio. The plugin will prompt for a fine-grained, read-only repo token when fetching scripts.'

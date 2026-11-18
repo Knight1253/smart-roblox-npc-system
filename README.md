@@ -1,17 +1,18 @@
 # Smart Roblox NPC System
 
-A configurable sandbox NPC framework. The Studio plugin fetches the maintained source files from this repository.
+A configurable sandbox NPC framework. The Studio plugin fetches maintained source files from this private GitHub repository.
 
 ## Install on Windows
 
-1. Download `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1`.
-2. Run the batch file to install the local plugin, then restart Studio.
-3. Click **Plugins > Smart NPC System**. The plugin downloads the config and runtime scripts from GitHub and installs them under `ServerScriptService.SmartNPCSystem`.
-4. Allow HTTP requests in Studio if prompted. **GitHub raw download requires the repository to be publicly readable**; don't put a personal access token in a plugin.
+1. Install [GitHub CLI](https://cli.github.com/) and run `gh auth login` using an account that can read this repository.
+2. Download `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1`, then run the batch file. It uses the GitHub CLI's existing login to download the local Studio plugin, and does not embed credentials in the plugin file.
+3. Restart Studio. Open **Plugins > Smart NPC System**. Create a GitHub fine-grained token scoped only to this repository with **Contents: Read-only**, paste it into the plugin window, and click **Fetch and install**. The plugin fetches the config and runtime scripts from GitHub and installs them under `ServerScriptService.SmartNPCSystem`.
+
+The runtime plugin token is not saved by the plugin and is cleared from the input after the request. The plugin necessarily handles it in memory during the request; only use this with plugin source you trust. Never use a classic token or a token with write/admin permissions. Revoke the fine-grained token in GitHub settings when no longer needed. Private raw GitHub URLs do not provide authentication, so the plugin uses GitHub's Contents API.
 
 ## Required place setup
 
-- `ServerStorage.NPC`: unanchored rig Model with `Humanoid` and `HumanoidRootPart`.
+- `ServerStorage.NPC`: an unanchored rig Model with `Humanoid` and `HumanoidRootPart`.
 - `Workspace.NPCSpawnRegion`: BasePart covering the random spawn area.
 
 ## Optional content
@@ -23,14 +24,14 @@ A configurable sandbox NPC framework. The Studio plugin fetches the maintained s
 - `Workspace.NPCNoise`: optional BindableEvent; server scripts can call `Fire(position, radius, source)` to make NPCs investigate a sound.
 - NPC model attributes: `Faction`, `DialogueText`, `ShopEnabled`, `QuestName`, `QuestGoal`, `QuestReward`, `QuestTargetName`.
 - Players may use a `Stealth` character attribute; it reduces NPC visual detection range.
-- Put authorized user IDs in `AdminUserIds` for `/npc recall` and `/npc debug` chat commands.
+- Add authorized user IDs to `AdminUserIds` for optional chat commands.
 
 ## Features
 
-Fifteen configurable NPCs by default; random region spawn, spacing, respawn; gear and per-weapon stats; server-side melee/ranged attacks, ammo/reload; vision with line-of-sight and stealth; faction targeting; pathfinding; idle, roaming, patrol, chase, investigation, search, flee, and return states; group alerts; script-triggerable hearing; emotions and overhead labels; random loot drops; talk/shop prompts; simple quests/rewards; coins and reputation leaderstats; optional DataStore persistence; debug attributes/admin commands.
+Configurable spawn/respawn, gear and weapon stats, server-side melee/ranged attacks and reloads, line-of-sight and stealth detection, factions, pathfinding, idle/roam/patrol/chase/investigate/search/flee/return behavior, group alerts, hearing, emotions, loot, dialogue/shop prompts, simple quests and rewards, player coins/reputation, optional DataStore persistence, and admin/debug helpers.
 
-This is an extensible sandbox foundation, not a finished production game. For reliable quest kill credit, combat damage code should tag the NPC Humanoid with a `creator` ObjectValue containing the responsible Player. Shops currently offer the first Tool in `NPCShopItems`; customize the interaction script for a selection UI. Persistence needs Studio API access for testing and should be tested in a published private experience.
+This is an extensible sandbox starter, not a fully production-verified game. Test in a private Studio session. Persistence needs Studio API access for testing. Review the sources before installing.
 
-## Configuration and source
+## Repository source
 
-Edit files under `src/ServerScriptService/SmartNPCSystem/`. The plugin fetches every file listed in `plugin/SmartNPCInstaller.lua` from the repository's `main` branch on each install/update.
+Edit files under `src/ServerScriptService/SmartNPCSystem/`. The plugin fetches all files listed in `plugin/SmartNPCInstaller.lua` from the private repository's `main` branch on each update.
