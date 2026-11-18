@@ -1,4 +1,5 @@
--- Owner-only client control panel. Requires TopbarPlus v3 Icon module in ReplicatedStorage.
+-- Smart NPC panel needs TopbarPlus Icon module in ReplicatedStorage.
+-- Search recursively so Toolbox/asset model package nesting is supported.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
@@ -6,31 +7,21 @@ local remotes = ReplicatedStorage:WaitForChild("SmartNPCControl")
 local getSnapshot = remotes:WaitForChild("GetSnapshot")
 local commandEvent = remotes:WaitForChild("Command")
 
-local function findIconModule()
-	local direct = ReplicatedStorage:FindFirstChild("Icon")
-	if direct and direct:IsA("ModuleScript") then return direct end
-	local packages = ReplicatedStorage:FindFirstChild("Packages")
-	if packages then
-		for _, name in ipairs({ "TopbarPlus", "Icon" }) do
-			local package = packages:FindFirstChild(name)
-			if package then
-				if package:IsA("ModuleScript") then return package end
-				local icon = package:FindFirstChild("Icon")
-				if icon and icon:IsA("ModuleScript") then return icon end
-			end
-		end
+local iconModule
+for _, candidate in ipairs(ReplicatedStorage:GetDescendants()) do
+	if candidate:IsA("ModuleScript") and candidate.Name == "Icon" then
+		iconModule = candidate
+		break
 	end
 end
-
-local iconModule = findIconModule()
 if not iconModule then
-	warn("Smart NPC panel needs TopbarPlus installed. Place its Icon ModuleScript at ReplicatedStorage.Icon or ReplicatedStorage.Packages.TopbarPlus.")
+	warn("Smart NPC panel requires TopbarPlus. In Studio use Smart NPC System > Install TopbarPlus, or add asset 92368439343389 to ReplicatedStorage.")
 	return
 end
 
 local ok, Icon = pcall(require, iconModule)
 if not ok or type(Icon) ~= "table" or type(Icon.new) ~= "function" then
-	warn("Smart NPC panel couldn't load the TopbarPlus Icon module:", Icon)
+	warn("Smart NPC panel couldn't load TopbarPlus Icon module:", Icon)
 	return
 end
 
@@ -111,15 +102,15 @@ local function refresh()
 	local success, data = pcall(function() return getSnapshot:InvokeServer() end)
 	if not success or type(data) ~= "table" then status.Text = "Could not reach the server."; return end
 	if not data.authorized then gui.Enabled = false; status.Text = "Owner/private-server-owner access only."; return end
-	for _, child in list:GetChildren() do if child:IsA("TextLabel") or child:IsA("TextButton") then child:Destroy() end end
+	for _, child in ipairs(list:GetChildren()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then child:Destroy() end
+	end
 	local order = 1
 	makeButton("AI: " .. (data.aiEnabled and "ON (click to pause)" or "PAUSED (click to enable)"), function()
-		commandEvent:FireServer("SetAI", not data.aiEnabled)
-		task.wait(0.2); refresh()
+		commandEvent:FireServer("SetAI", not data.aiEnabled); task.wait(0.2); refresh()
 	end, order); order += 1
 	makeButton("Spawning: " .. (data.spawningEnabled and "ON (click to stop)" or "STOPPED (click to start)"), function()
-		commandEvent:FireServer("SetSpawning", not data.spawningEnabled)
-		task.wait(0.2); refresh()
+		commandEvent:FireServer("SetSpawning", not data.spawningEnabled); task.wait(0.2); refresh()
 	end, order); order += 1
 	makeButton("Recall all NPCs to spawn/home", function() commandEvent:FireServer("RecallAll"); status.Text = "Recall command sent." end, order); order += 1
 	makeButton("Heal all NPCs", function() commandEvent:FireServer("HealAll"); status.Text = "Heal command sent." end, order); order += 1
@@ -133,7 +124,7 @@ local function refresh()
 	summary.TextSize = 13
 	summary.TextColor3 = Color3.fromRGB(220, 225, 235)
 	summary.TextXAlignment = Enum.TextXAlignment.Left
-	summary.Text = ("Active NPCs: %d\n%s"):format(#(data.npcs or {}), "State counts below")
+	summary.Text = ("Active NPCs: %d\nState counts below"):format(#(data.npcs or {}))
 	summary.Parent = list; order += 1
 	local sortedStates = {}
 	for state, count in pairs(states) do table.insert(sortedStates, { state = state, count = count }) end
@@ -145,16 +136,10 @@ local function refresh()
 		row.TextXAlignment = Enum.TextXAlignment.Left; row.Text = entry.state .. ": " .. entry.count; row.Parent = list
 		order += 1
 	end
-	status.Text = "Authorized owner controls. Commands are checked again by the server."
+	status.Text = "Authorized owner controls. Server validates every command."
 	task.defer(function() list.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 20) end)
 end
 
 local icon = Icon.new():setLabel("NPCs"):setOrder(8)
-icon:bindEvent("selected", function()
-	gui.Enabled = true
-	refresh()
-end)
-icon:bindEvent("deselected", function()
-	gui.Enabled = false
-end)
-```
+icon:bindEvent("selected", function() gui.Enabled = true; refresh() end)
+icon:bindEvent("deselected", function() gui.Enabled = false end)
