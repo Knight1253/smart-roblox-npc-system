@@ -1,27 +1,34 @@
 # Smart Roblox NPC System
 
-A private, Rojo-ready Roblox NPC starter and Windows local-plugin installer.
+A Rojo-ready Roblox NPC package with a local Studio plugin that fetches the actual scripts from this repository.
 
-## Install the Studio plugin (Windows)
+## Install on Windows
 
-1. Download this repository or its `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1` files.
-2. Run `Install-SmartNPCPlugin.bat`. It downloads the plugin source from this repository's `main` branch, packages it as a Roblox XML model, and places it in `%LOCALAPPDATA%\Roblox\Plugins`.
-3. Restart Roblox Studio. Use **Plugins > Smart NPC System** and click the toolbar button to add/update the server scripts in the currently open place.
+1. Download `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1` (or clone/download the repo).
+2. Run the batch file. It locates the per-user Roblox Studio Plugins directory (Bloxstrap normally uses the same user plugin directory), downloads `plugin/SmartNPCInstaller.lua` from this repository, and installs the local plugin file.
+3. Restart Studio. Under **Plugins > Smart NPC System**, click the toolbar button. The plugin fetches the current config and controller scripts from this repo and writes them into `ServerScriptService.SmartNPCSystem`.
+4. In Studio, enable **Game Settings > Security > Allow HTTP Requests** if plugin HTTP downloads are blocked.
 
-The installer only writes the local plugin file; the plugin changes the open place only when you click its install button. Review the source before running if you prefer to audit what it installs.
+The installer only installs the local plugin file. The plugin only edits the currently open place after you click its button. Review the Lua sources before installing if you want to inspect the code first.
 
-## Place requirements
+## Required place setup
 
-- `ServerStorage.NPC`: a Model with a `Humanoid` and `HumanoidRootPart`.
-- `Workspace.NPCSpawnRegion`: a BasePart covering the desired spawn area.
-- Optional `ServerStorage.NPCGear`: Tools. Each Tool can have numeric `Damage`, `Range`, and `Cooldown` attributes.
-- NPC model parts should be unanchored.
+- `ServerStorage.NPC`: a Model with a `Humanoid` and `HumanoidRootPart`. Keep its body parts unanchored.
+- `Workspace.NPCSpawnRegion`: a `BasePart` covering the spawn area.
+- Optional `ServerStorage.NPCGear`: Tools with optional numeric `Damage`, `Range`, and `Cooldown` attributes.
 
-The installed package appears under `ServerScriptService.SmartNPCSystem` and includes `NPCConfig` plus `NPCController`. It spawns 15 NPCs by default, supports idle/roam/investigate/search/chase/attack/return states, configurable gear and factions, emotion/state attributes, and respawning.
+The package spawns 15 NPCs by default. It includes configurable spawning and respawning, random gear with per-tool combat stats, line-of-sight target detection, faction filtering, pathfinding chase, attacks, idle/wander, last-known-position investigation, searching, returning home, emotion/state attributes, and optional overhead emotion labels.
+
+## Configuration
+
+Edit `src/ServerScriptService/SmartNPCSystem/NPCConfig.lua` in the repository. When the plugin runs again, it fetches the latest repository version and updates the installed `NPCConfig` and `NPCController` scripts.
+
+## Possible future features
+
+Dialogue and interaction prompts; quests and schedules; patrol routes and guard posts; group alerts and ally support; ranged weapons, ammo and reloads; animation support; alertness/hearing and stealth; cover-taking and dodge behavior; combat roles/classes; loot drops and inventory; reputation/faction relationships; NPC shops; saveable NPC/player reputation; admin controls and spawn zones; performance budgets and debug visualization.
 
 ## Notes
 
 - The batch installer is for Windows and requires PowerShell and internet access.
-- Restart Studio after installing/updating the local plugin.
-- Run a Studio server test before publishing. Back up your place first.
-- This project does not silently download or install Roblox Studio itself or modify other place files.
+- Restart Studio after installing or updating the local plugin.
+- Test in Studio's server mode and back up your place before publishing.
