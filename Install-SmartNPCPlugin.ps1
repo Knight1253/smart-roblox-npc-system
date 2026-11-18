@@ -37,8 +37,9 @@ function Install-PluginFile([string]$sourcePath, [string]$outputName, [string]$r
 try {
     Install-PluginFile 'plugin/SmartNPCInstaller.lua' 'SmartNPCInstaller' 'RBXSMARTNPCPLUGIN'
     Install-PluginFile 'plugin/TopbarPlusAssetInstaller.lua' 'TopbarPlusAssetInstaller' 'RBXTOPBARPLUSINSTALLER'
+    Install-PluginFile 'plugin/SmartNPCDiagnostics.lua' 'SmartNPCDiagnostics' 'RBXSMARTNPCDIAGNOSTICS'
 } finally {
     $headers.Authorization = $null
     $token = $null
 }
-Write-Host 'Restart Roblox Studio. Use Smart NPC System > Install TopbarPlus to insert asset 92368439343389 into the place.'
+Write-Host 'Restart Roblox Studio. Diagnostics plugin monitors Studio Output and offers safe Smart NPC setup.'
