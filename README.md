@@ -1,34 +1,36 @@
 # Smart Roblox NPC System
 
-A Rojo-ready Roblox NPC package with a local Studio plugin that fetches the actual scripts from this repository.
+A configurable sandbox NPC framework. The Studio plugin fetches the maintained source files from this repository.
 
 ## Install on Windows
 
-1. Download `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1` (or clone/download the repo).
-2. Run the batch file. It locates the per-user Roblox Studio Plugins directory (Bloxstrap normally uses the same user plugin directory), downloads `plugin/SmartNPCInstaller.lua` from this repository, and installs the local plugin file.
-3. Restart Studio. Under **Plugins > Smart NPC System**, click the toolbar button. The plugin fetches the current config and controller scripts from this repo and writes them into `ServerScriptService.SmartNPCSystem`.
-4. In Studio, enable **Game Settings > Security > Allow HTTP Requests** if plugin HTTP downloads are blocked.
-
-The installer only installs the local plugin file. The plugin only edits the currently open place after you click its button. Review the Lua sources before installing if you want to inspect the code first.
+1. Download `Install-SmartNPCPlugin.bat` and `Install-SmartNPCPlugin.ps1`.
+2. Run the batch file to install the local plugin, then restart Studio.
+3. Click **Plugins > Smart NPC System**. The plugin downloads the config and runtime scripts from GitHub and installs them under `ServerScriptService.SmartNPCSystem`.
+4. Allow HTTP requests in Studio if prompted. **GitHub raw download requires the repository to be publicly readable**; don't put a personal access token in a plugin.
 
 ## Required place setup
 
-- `ServerStorage.NPC`: a Model with a `Humanoid` and `HumanoidRootPart`. Keep its body parts unanchored.
-- `Workspace.NPCSpawnRegion`: a `BasePart` covering the spawn area.
-- Optional `ServerStorage.NPCGear`: Tools with optional numeric `Damage`, `Range`, and `Cooldown` attributes.
+- `ServerStorage.NPC`: unanchored rig Model with `Humanoid` and `HumanoidRootPart`.
+- `Workspace.NPCSpawnRegion`: BasePart covering the random spawn area.
 
-The package spawns 15 NPCs by default. It includes configurable spawning and respawning, random gear with per-tool combat stats, line-of-sight target detection, faction filtering, pathfinding chase, attacks, idle/wander, last-known-position investigation, searching, returning home, emotion/state attributes, and optional overhead emotion labels.
+## Optional content
 
-## Configuration
+- `ServerStorage.NPCGear`: Tools with attributes `WeaponType` (Melee/Ranged), `Damage`, `Range`, `Cooldown`, `MagazineSize`, and `ReloadTime`.
+- `ServerStorage.NPCLoot`: Tools eligible for random death drops.
+- `ServerStorage.NPCShopItems`: purchasable Tools with numeric `Price` attributes.
+- `Workspace.NPCPatrols`: route folders containing ordered BaseParts. Set an NPC's `PatrolRoute` attribute to a route folder name; otherwise its faction or `Default` route is used.
+- `Workspace.NPCNoise`: optional BindableEvent; server scripts can call `Fire(position, radius, source)` to make NPCs investigate a sound.
+- NPC model attributes: `Faction`, `DialogueText`, `ShopEnabled`, `QuestName`, `QuestGoal`, `QuestReward`, `QuestTargetName`.
+- Players may use a `Stealth` character attribute; it reduces NPC visual detection range.
+- Put authorized user IDs in `AdminUserIds` for `/npc recall` and `/npc debug` chat commands.
 
-Edit `src/ServerScriptService/SmartNPCSystem/NPCConfig.lua` in the repository. When the plugin runs again, it fetches the latest repository version and updates the installed `NPCConfig` and `NPCController` scripts.
+## Features
 
-## Possible future features
+Fifteen configurable NPCs by default; random region spawn, spacing, respawn; gear and per-weapon stats; server-side melee/ranged attacks, ammo/reload; vision with line-of-sight and stealth; faction targeting; pathfinding; idle, roaming, patrol, chase, investigation, search, flee, and return states; group alerts; script-triggerable hearing; emotions and overhead labels; random loot drops; talk/shop prompts; simple quests/rewards; coins and reputation leaderstats; optional DataStore persistence; debug attributes/admin commands.
 
-Dialogue and interaction prompts; quests and schedules; patrol routes and guard posts; group alerts and ally support; ranged weapons, ammo and reloads; animation support; alertness/hearing and stealth; cover-taking and dodge behavior; combat roles/classes; loot drops and inventory; reputation/faction relationships; NPC shops; saveable NPC/player reputation; admin controls and spawn zones; performance budgets and debug visualization.
+This is an extensible sandbox foundation, not a finished production game. For reliable quest kill credit, combat damage code should tag the NPC Humanoid with a `creator` ObjectValue containing the responsible Player. Shops currently offer the first Tool in `NPCShopItems`; customize the interaction script for a selection UI. Persistence needs Studio API access for testing and should be tested in a published private experience.
 
-## Notes
+## Configuration and source
 
-- The batch installer is for Windows and requires PowerShell and internet access.
-- Restart Studio after installing or updating the local plugin.
-- Test in Studio's server mode and back up your place before publishing.
+Edit files under `src/ServerScriptService/SmartNPCSystem/`. The plugin fetches every file listed in `plugin/SmartNPCInstaller.lua` from the repository's `main` branch on each install/update.

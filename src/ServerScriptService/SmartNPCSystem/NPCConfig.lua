@@ -1,12 +1,16 @@
+-- Smart NPC sandbox framework configuration.
 return {
-	-- Population and spawn/respawn
 	NPCCount = 15,
 	RespawnDelay = 5,
+	SpawnAttempts = 60,
 	MinimumSpawnSpacing = 12,
-	SpawnAttempts = 50,
-	
-	-- Awareness and movement
+	RegionName = "NPCSpawnRegion",
+	TemplateName = "NPC",
+	SpawnedFolderName = "SpawnedNPCs",
+
 	DetectionRange = 80,
+	HearingRange = 60,
+	StealthDetectionMultiplier = 0.4,
 	WanderRadius = 45,
 	WanderMinDistance = 8,
 	IdleMin = 2,
@@ -16,17 +20,30 @@ return {
 	SearchRadius = 18,
 	ThinkInterval = 0.3,
 	PathRefreshInterval = 1.25,
+	MaxChaseDistance = 150,
 	
-	-- Combat
 	AttackDamage = 15,
 	AttackRange = 5,
 	AttackCooldown = 1.2,
 	FearHealthPercent = 0.3,
+	FleeSeconds = 5,
+	UseFactions = true,
+	DefaultFaction = "Neutral",
+	GroupAlertRange = 90,
 	
-	-- Optional team/faction filtering and tools
-	UseFactions = false,
 	GearFolderName = "NPCGear",
-	
-	-- Optional emotion billboard above NPC heads
+	LootFolderName = "NPCLoot",
+	LootDropChance = 0.25,
 	ShowEmotionLabel = true,
+	PatrolFolderName = "NPCPatrols",
+	
+	EnablePersistence = true,
+	DataStoreName = "SmartNPCPlayerData_v1",
+	PersistenceSaveInterval = 90,
+	StartingCoins = 100,
+	StartingReputation = 0,
+	
+	-- Add your Roblox user IDs to enable the optional chat commands.
+	AdminUserIds = {},
+	DebugAttributes = true,
 }
