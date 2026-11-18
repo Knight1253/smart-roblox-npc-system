@@ -1,25 +1,22 @@
 # Smart Roblox NPC System
 
-Sandbox NPC framework plus Windows Studio plugins. The installer uses GitHub CLI authentication for the private repository; install each local plugin by running `Install-SmartNPCPlugin.bat`, then restart Studio.
+Sandbox NPC framework plus independent Windows Studio plugins. Run `Install-SmartNPCPlugin.bat` after authenticating with GitHub CLI, then restart Studio.
 
-## Studio plugins
+## Separate Studio plugins
 
-- **Smart NPC Installer**: install the bundled NPC scripts offline or fetch the latest private-repo sources with a fine-grained read-only GitHub token.
-- **TopbarPlus Asset Installer**: explicit Studio-time insertion of official asset `92368439343389`.
-- **Smart NPC Diagnostics**: Studio Output monitor, structural checker, safe command input, and setup helper.
+- **Smart NPC Installer** installs bundled framework files or fetches the latest private-repo versions.
+- **TopbarPlus Asset Installer** inserts TopbarPlus asset `92368439343389` into the open place at Studio edit time.
+- **Smart NPC Setup** checks/creates only NPC-system objects and scripts prerequisites.
+- **Universal Studio Monitor** is a separate, project-independent Output monitor usable in any Roblox Studio place. It captures Studio log events, filters text, pauses/resumes capture, clears entries, and can copy visible log text when Studio exposes clipboard support. Its input is a text filter—not a command prompt—and it never executes Lua or modifies the project.
 
-## Diagnostics and setup helper
+## Universal monitor
 
-Open **Plugins > Smart NPC System** diagnostics. It captures Studio Output messages while Studio is open, including errors and warnings. Built-in commands are `help`, `scan`, `fix npc`, and `topbar`. The plugin does not execute arbitrary typed Lua, does not claim to understand every third-party system, and does not auto-rewrite arbitrary scripts.
+Open **Plugins > Studio Monitor > Universal Studio Monitor**. It subscribes to Studio's `LogService.MessageOut` while the plugin is loaded. It classifies errors, warnings, and regular log output, keeps a bounded in-memory list, and supports literal substring filtering. It does not claim to monitor arbitrary network/device input or automatically repair third-party code. Use the standard Output window for full tracebacks and source navigation.
 
-**Create required NPC setup** creates only missing objects and preserves existing ones: `ServerStorage.NPCGear`, `ServerStorage.NPCLoot`, `ServerStorage.NPCShopItems`, `Workspace.NPCPatrols`, `Workspace.NPCSpawnRegion`, and a basic R6 `ServerStorage.NPC` template if none exists. The default spawn region is a visible 100x100 placeholder near origin; move/resize it over safe ground before play testing. If a custom `NPC` object exists but is incompatible, it is not overwritten. Replace the generated starter rig with a tested custom rig for production.
+## Smart NPC setup helper
 
-`scan` checks these dependencies, warns about anchored NPC body parts, and checks whether TopbarPlus is present. `topbar` tries inserting asset `92368439343389` into Studio's ReplicatedStorage; if Roblox denies the import, use Toolbox/Wally. Imported third-party code should be reviewed before publishing. Studio-time plugin actions affect the open place only when you explicitly click the action.
+Open **Plugins > Smart NPC Setup**. Its allowlisted commands are `scan`, `fix npc`, `topbar`, and `help`. `fix npc` creates only missing NPC folders, a visible spawn-region placeholder, and a basic R6 template if `ServerStorage.NPC` is absent. Existing custom assets are preserved. Move and resize the generated region over safe ground and replace/test the sample rig before publishing.
 
-## Framework requirements and features
+## Safety and project requirements
 
-Required runtime objects are `ServerStorage.NPC` (Model with Humanoid/ HumanoidRootPart) and `Workspace.NPCSpawnRegion` (BasePart). Optional folders include NPCGear, NPCLoot, NPCShopItems, and NPCPatrols. Features include configurable spawn/respawn, pathfinding AI, idle/roam/investigate/search, gear, emotions, interactions and memory, persistence, and a server-validated owner TopbarPlus panel.
-
-## Limits and safety
-
-There is no safe universal auto-fixer for arbitrary games or scripts. Diagnostics supports general Studio log capture and explicit, allowlisted setup actions. It does not execute arbitrary code from chat, Output, or the command box. DataStores require appropriate Studio API access for testing. Review the project scripts and test in a private place before publishing.
+Required NPC runtime assets: `ServerStorage.NPC` with `Humanoid` and `HumanoidRootPart`, and `Workspace.NPCSpawnRegion` as a BasePart. Diagnostics never evaluates arbitrary typed Lua, never rewrites arbitrary scripts, and never treats output text as commands. DataStores require appropriate Studio API access. Test in a private place and review scripts/assets before publishing.

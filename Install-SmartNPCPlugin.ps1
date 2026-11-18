@@ -38,8 +38,9 @@ try {
     Install-PluginFile 'plugin/SmartNPCInstaller.lua' 'SmartNPCInstaller' 'RBXSMARTNPCPLUGIN'
     Install-PluginFile 'plugin/TopbarPlusAssetInstaller.lua' 'TopbarPlusAssetInstaller' 'RBXTOPBARPLUSINSTALLER'
     Install-PluginFile 'plugin/SmartNPCDiagnostics.lua' 'SmartNPCDiagnostics' 'RBXSMARTNPCDIAGNOSTICS'
+    Install-PluginFile 'plugin/UniversalStudioMonitor.lua' 'UniversalStudioMonitor' 'RBXUNIVERSALSTUDIOMONITOR'
 } finally {
     $headers.Authorization = $null
     $token = $null
 }
-Write-Host 'Restart Roblox Studio. Diagnostics plugin monitors Studio Output and offers safe Smart NPC setup.'
+Write-Host 'Restart Roblox Studio. Use Universal Studio Monitor for project-independent Output capture; NPC setup remains in Smart NPC Diagnostics.'
